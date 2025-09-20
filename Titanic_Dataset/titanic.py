@@ -6,11 +6,13 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import os
 from sklearn.preprocessing import LabelEncoder
 
+os.chdir("B:/Projects 2024-2027/titanic")
+
 # Load the training dataset and display the first few rows
-df_titanic = pd.read_csv("B:/Projects 2024-2027/titanic/train.csv")
+df_titanic = pd.read_csv("train.csv")
 df_titanic.head()
 
 # Print information about the dataset, including data types and non-null counts
