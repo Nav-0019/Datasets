@@ -1,6 +1,5 @@
 # Import necessary libraries
 import pandas as pd
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import streamlit as st
@@ -54,14 +53,19 @@ def preprocess_and_engineer_features(df_titanic):
 
 if __name__ == "__main__":
 
-    try:
-        # Load the training dataset and display the first few rows
+    @st.cache_data
+    def load_and_preprocess_data():
         df_titanic = pd.read_csv("train.csv")
-    except FileNotFoundError:
-        print("File not found. Please check the file path and ensure that it should be in same directory.")
-        exit()
+        df_titanic = preprocess_and_engineer_features(df_titanic)
+        return df_titanic
+        
+    @st.cache_resource
+    def train_model(x_train, y_train):
+        model = LogisticRegression(max_iter=1000)
+        model.fit(x_train, y_train)
+        return model
     
-    df_titanic = preprocess_and_engineer_features(df_titanic)
+    df_titanic = load_and_preprocess_data()
 
     # Separate features (x) and the target variable (y)
     x = df_titanic.drop(columns=["Survived"])
@@ -71,11 +75,9 @@ if __name__ == "__main__":
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state=42, stratify=y)
 
     # Initialize and train the Logistic Regression model
-    log_reg = LogisticRegression(max_iter=1000)
-    log_reg.fit( x_train, y_train)
+    log_reg = train_model(x_train, y_train)
 
-    # Make predictions on the test set
-    y_pred = log_reg.predict(x_test)
+    # Streamlit app for user input and prediction
 
     st.title("Titanic Survival Prediction")
     st.write("This app predicts whether a passenger survived the Titanic disaster based on their features.")
@@ -90,29 +92,35 @@ if __name__ == "__main__":
     embarked = st.selectbox("Port of Embarkation", ["C", "Q", "S"])
     Name = st.text_input("Full Name (optional, for Title extraction)", "Mr. Test")
 
-    # Create a DataFrame for the input
-    df_input = pd.DataFrame({
-        "Pclass": [pclass],
-        "Sex": [0 if sex == "male" else 1],
-        "Age": [age],
-        "SibSp": [sibsp],
-        "Parch": [parch],
-        "Fare": [fare],
-        "Embarked": [embarked],
-        "Name": [Name],  
-        "Ticket": ["TestTicket"],    
-    })
-
-    df_input = preprocess_and_engineer_features(df_input)
-
-    # Align input columns with training data
-    df_input = df_input.reindex(columns=x_train.columns, fill_value=0)
-
     if st.button("Predict Survival"):
-        prediction = log_reg.predict(df_input)
-        prediction_proba = log_reg.predict_proba(df_input)[0][1]
-        
-        result = "Survived" if prediction[0] == 1 else "Did Not Survive"
-        st.write(f"The passenger would have: **{result}**")
-        st.write(f"Survival Probability: **{prediction_proba:.2f}**")
-        
+
+        if age <= 0 or fare < 0:
+            st.warning("Please enter valid Age and Fare values.")
+        else:
+            # Create a DataFrame for the input
+            df_input = pd.DataFrame({
+                "Pclass": [pclass],
+                "Sex": [0 if sex == "male" else 1],
+                "Age": [age],
+                "SibSp": [sibsp],
+                "Parch": [parch],
+                "Fare": [fare],
+                "Embarked": [embarked],
+                "Name": [Name],  
+                "Ticket": ["TestTicket"],    
+            })
+
+            df_input = preprocess_and_engineer_features(df_input)
+
+            # Align input columns with training data
+            df_input = df_input.reindex(columns=x_train.columns, fill_value=0)
+
+            prediction = log_reg.predict(df_input)
+            prediction_proba = log_reg.predict_proba(df_input)[0][1]
+                
+            result = "Survived" if prediction[0] == 1 else "Did Not Survive"
+            st.write(f"The passenger would have: **{result}**")
+            st.write(f"Survival Probability: **{prediction_proba*100:.2f}%**")
+                
+            test_accuracy = log_reg.score(x_test, y_test)
+            st.write(f"Model Test Accuracy: **{test_accuracy*100:.2f}%**")
