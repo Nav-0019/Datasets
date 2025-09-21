@@ -17,7 +17,7 @@ def preprocess_and_engineer_features(df_titanic):
     # Convert categorical data into numerical format for the model
     # Use LabelEncoder for the 'Sex' column
 
-    df_titanic["Sex"] = df_titanic['Sex'].map( {'male': 0, 'female': 1} ).astype(int)
+    df_titanic["Sex"] = df_titanic['Sex'].map( {'male': 0, 'female': 1} ).fillna(-1).astype(int)
 
     # Use one-hot encoding for the 'Embarked' column
     Embarked_encoder = pd.get_dummies( df_titanic["Embarked"], prefix="Embarked", drop_first=True)
