@@ -9,7 +9,7 @@ def preprocess_and_engineer_features(df_titanic):
     df_titanic["Age"] = df_titanic.groupby(["Sex", "Pclass"])["Age"].transform(lambda x : x.fillna(x.median()))
 
     # Drop the 'Cabin' column due to a high number of missing values
-    df_titanic.drop(columns = ["Cabin"], inplace = True)
+    df_titanic.drop(columns = ["Cabin"], inplace = True, errors='ignore')
 
     # Impute missing 'Embarked' values with the most frequent value (mode)
     df_titanic["Embarked"] = df_titanic["Embarked"].fillna(df_titanic["Embarked"].mode()[0])
@@ -22,7 +22,7 @@ def preprocess_and_engineer_features(df_titanic):
     # Use one-hot encoding for the 'Embarked' column
     Embarked_encoder = pd.get_dummies( df_titanic["Embarked"], prefix="Embarked", drop_first=True)
     df_titanic = pd.concat( [df_titanic, Embarked_encoder], axis=1)
-    df_titanic.drop(columns = ["Embarked"], inplace = True)
+    df_titanic.drop(columns = ["Embarked"], inplace = True, errors='ignore')
 
     # Create a new feature 'FamilySize' from 'SibSp' and 'Parch'
     df_titanic["FamilySize"] = df_titanic["SibSp"] + df_titanic["Parch"] + 1
@@ -41,13 +41,13 @@ def preprocess_and_engineer_features(df_titanic):
     # Use one-hot encoding for the new 'Title' feature
     Title_encoder = pd.get_dummies( df_titanic["Title"], prefix="Title", drop_first=True)
     df_titanic = pd.concat( [df_titanic, Title_encoder], axis=1)
-    df_titanic.drop(columns= ["Title"], inplace=True)
+    df_titanic.drop(columns= ["Title"], inplace=True, errors='ignore')
 
     # Create a new feature 'FarePerPerson'
     df_titanic["FarePerPerson"] = df_titanic["Fare"] / df_titanic["FamilySize"]
 
     # Drop columns that are no longer needed for the model
-    df_titanic.drop(columns = ["Name", "Ticket", "PassengerId"], inplace = True)
+    df_titanic.drop(columns = ["Name", "Ticket", "PassengerId"], inplace = True,  errors='ignore')
 
     return df_titanic
 
@@ -83,6 +83,8 @@ if __name__ == "__main__":
     st.write("This app predicts whether a passenger survived the Titanic disaster based on their features.")
     st.write("Write Passenger's details below and let me predict for him:")
 
+    Name = st.text_input("Full Name (optional, for Title extraction)", "Mr. Test")
+    passenger_id = st.number_input("Passenger ID (optional)", min_value=0, value=0)
     pclass = st.selectbox("Passenger Class", [1, 2, 3])
     sex = st.selectbox("Sex", ["male", "female"])
     age = st.number_input("Age", min_value=0, max_value=100, value=25)
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     parch = st.number_input("Number of Parents/Children Aboard", min_value=0, max_value=10, value=0)
     fare = st.number_input("Fare", min_value=0.0, max_value=600.0, value=32.2)
     embarked = st.selectbox("Port of Embarkation", ["C", "Q", "S"])
-    Name = st.text_input("Full Name (optional, for Title extraction)", "Mr. Test")
+    cabin = st.text_input("Cabin (optional)", "")
 
     if st.button("Predict Survival"):
 
@@ -108,6 +110,8 @@ if __name__ == "__main__":
                 "Embarked": [embarked],
                 "Name": [Name],  
                 "Ticket": ["TestTicket"],    
+                "Cabin": [cabin if cabin else None],
+                "PassengerId": [passenger_id if passenger_id != 0 else 9999]
             })
 
             df_input = preprocess_and_engineer_features(df_input)
