@@ -32,7 +32,7 @@ def preprocess_and_engineer_features(df_titanic):
     df_titanic.loc[df_titanic["FamilySize"] == 1, "IsAlone"] = 1
 
     # Extract titles from the 'Name' column
-    df_titanic["Title"] = df_titanic["Name"].str.extract( " ([A-Za-z]+)\.", expand = False)
+    df_titanic["Title"] = df_titanic["Name"].str.extract(r" ([A-Za-z]+)\.", expand = False)
 
     # Group less common titles into a 'Rare' category
     df_titanic["Title"] = df_titanic["Title"].replace(['Don', 'Rev', 'Dr', 'Major', 'Lady', 'Sir', 'Mlle', 'Col', 'Capt', 'Countess', 'Jonkheer'], "Rare")
