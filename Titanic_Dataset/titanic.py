@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import streamlit as st
-    
+
 def preprocess_and_engineer_features(df_titanic):
     # Impute missing 'Age' values based on the median of 'Sex' and 'Pclass' groups
     df_titanic["Age"] = df_titanic.groupby(["Sex", "Pclass"])["Age"].transform(lambda x : x.fillna(x.median()))
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     @st.cache_data
     def load_and_preprocess_data():
-        df_titanic = pd.read_csv("train.csv")
+        df_titanic = pd.read_csv("Titanic_Dataset/train.csv")
         df_titanic = preprocess_and_engineer_features(df_titanic)
         return df_titanic
         
