@@ -13,7 +13,7 @@ def preprocess_data(data):
     """Preprocess the data by handling missing values and converting date columns."""
     if 'Date' in data.columns and 'Time' in data.columns:
          data['Date'] = pd.to_datetime(data['Date'], dayfirst=True, errors='coerce')
-        data.drop(columns=['Time', 'Sno'], inplace=True, errors='ignore')    
+        data.drop(columns=['Time', 'Sno'], inplace=True, errors='ignore')
     elif 'Updated On' in data.columns:
         data.rename(columns={'Updated On': 'Date'}, inplace=True)
          data['Date'] = pd.to_datetime(data['Date'], dayfirst=True, errors='coerce')
