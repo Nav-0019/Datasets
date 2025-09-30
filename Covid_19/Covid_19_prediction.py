@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -13,11 +12,11 @@ def load_data(file_path):
 def preprocess_data(data):
     """Preprocess the data by handling missing values and converting date columns."""
     if 'Date' in data.columns and 'Time' in data.columns:
-        data['Date'] = pd.to_datetime(data['Date'], format='%d-%m-%Y')
-        data.drop(columns=['Time', 'Sno'], inplace=True, errors='ignore')    
+        data['Date'] = pd.to_datetime(data['Date'], dayfirst=True, errors='coerce')
+        data.drop(columns=['Time', 'Sno'], inplace=True, errors='ignore')
     elif 'Updated On' in data.columns:
         data.rename(columns={'Updated On': 'Date'}, inplace=True)
-        data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y')
+        data['Date'] = pd.to_datetime(data['Date'], dayfirst=True, errors='coerce')
         data.dropna(subset=['Date'], inplace=True)
     elif 'Date' in data.columns:
         data['Date'] = pd.to_datetime(data['Date'], format='%d-%m-%Y')
@@ -43,6 +42,7 @@ def preprocess_data(data):
 
         data['State'] = data['State'].replace(State)
         data = data[data['State'] != 'Unassigned']
+        data = data[data['State'] != 'All States/UTs']
 
     for col in data.columns:
         if data[col].dtype == 'object' and col != 'State':
@@ -58,36 +58,48 @@ def run_app():
     st.write("This app predicts COVID-19 cases using historical data.")
 
     try:
-        df_cases = load_data("covid_19_india.csv")
-        df_testing = load_data("StatewiseTestingDetails.csv")
-        df_vaccination = load_data("covid_vaccine_statewise.csv")
+        df_cases = load_data("Covid_19/covid_19_india.csv")
+        df_testing = load_data("Covid_19/StatewiseTestingDetails.csv")
+        df_vaccination = load_data("Covid_19/covid_vaccine_statewise.csv")
 
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return
 
-    df_cases = preprocess_data(df_cases)
-    df_testing = preprocess_data(df_testing)
-    df_vaccination = preprocess_data(df_vaccination)
-
-    st.subheader("COVID-19 Cases Data")
-
-    latest_cases = df_cases[df_cases['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False).iloc[0]
-    latest_vaccine_india = df_vaccination[df_vaccination['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False).iloc[0] if 'All States/UTs' in df_vaccination['State'].unique() else None
+    
+    st.subheader("COVID-19 National Summary (Recalculated from Latest State Data)")
 
     col1, col2, col3 = st.columns(3)
+    
+    latest_cases_confirmed = "N/A"
+    latest_cases_deaths = "N/A"
+    latest_vaccine_doses = "N/A"
+
+    if not df_cases.empty:
+        latest_date_cases = df_cases['Date'].max()
+        latest_cases_summary = df_cases[df_cases['Date'] == latest_date_cases]
+        
+        if not latest_cases_summary.empty:
+            total_confirmed = latest_cases_summary.get('Confirmed', pd.Series([0])).sum()
+            total_deaths = latest_cases_summary.get('Deaths', pd.Series([0])).sum()
+            latest_cases_confirmed = f'{total_confirmed:,}'
+            latest_cases_deaths = f'{total_deaths:,}'
+        
+  
+    if not df_vaccination.empty and 'Date' in df_vaccination.columns:
+        latest_date_vaccine = df_vaccination['Date'].max()
+        latest_vaccine_summary = df_vaccination[df_vaccination['Date'] == latest_date_vaccine]
+        
+        if not latest_vaccine_summary.empty and "Total Doses Administered" in latest_vaccine_summary.columns:
+            total_doses = int(latest_vaccine_summary["Total Doses Administered"]).sum()
+            latest_vaccine_doses = f'{total_doses:,}'
 
     with col1:
-        st.metric("Total Confirmed Cases", f'{latest_cases["Confirmed"]:, .0f}')
+        st.metric("Total Confirmed Cases", latest_cases_confirmed)
     with col2:
-        st.metric("Total Deaths", f'{latest_cases["Deaths"]:, .0f}')
-
-    if latest_vaccine_india is not None:
-        with col3:
-            st.metric("Total Doses Administered", f'{latest_vaccine_india["Total Doses Administered"]:, .0f}')
-    else:
-        with col3:
-            st.metric("Total Doses Administered", "Data not available")
+        st.metric("Total Deaths", latest_cases_deaths)
+    with col3:
+        st.metric("Total Doses Administered", latest_vaccine_doses)
 
     st.subheader("---")
 
