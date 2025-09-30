@@ -86,7 +86,7 @@ def run_app():
             latest_cases_deaths = f'{total_deaths:,}'
         
   
-    if not df_vaccination.empty:
+    if not df_vaccination.empty and 'Date' in df_vaccination.columns:
         latest_date_vaccine = df_vaccination['Date'].max()
         latest_vaccine_summary = df_vaccination[df_vaccination['Date'] == latest_date_vaccine]
         
