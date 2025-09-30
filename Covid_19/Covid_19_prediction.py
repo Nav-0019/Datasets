@@ -57,9 +57,9 @@ def run_app():
     st.write("This app predicts COVID-19 cases using historical data.")
 
     try:
-        df_cases = load_data("covid_19_india.csv")
-        df_testing = load_data("StatewiseTestingDetails.csv")
-        df_vaccination = load_data("covid_vaccine_statewise.csv")
+        df_cases = load_data("Covid_19/covid_19_india.csv")
+        df_testing = load_data("Covid_19/StatewiseTestingDetails.csv")
+        df_vaccination = load_data("Covid_19/covid_vaccine_statewise.csv")
 
     except Exception as e:
         st.error(f"Error loading data: {e}")
