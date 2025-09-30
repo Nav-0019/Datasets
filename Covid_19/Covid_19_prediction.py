@@ -42,6 +42,7 @@ def preprocess_data(data):
 
         data['State'] = data['State'].replace(State)
         data = data[data['State'] != 'Unassigned']
+        data = data[data['State'] != 'All States/UTs']
 
     for col in data.columns:
         if data[col].dtype == 'object' and col != 'State':
@@ -65,38 +66,40 @@ def run_app():
         st.error(f"Error loading data: {e}")
         return
 
-    df_cases = preprocess_data(df_cases)
-    df_testing = preprocess_data(df_testing)
-    df_vaccination = preprocess_data(df_vaccination)
-
-    st.subheader("COVID-19 Cases Data")
-
-    all_states_df = df_cases[df_cases['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False)
-    if not all_states_df.empty:
-        latest_cases = all_states_df.iloc[0]
-    else:
-        st.warning("No aggregated 'All States/UTs' data available.")
-        latest_cases = None
     
-    all_states_vaccine_df = df_vaccination[df_vaccination['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False)
+    st.subheader("COVID-19 National Summary (Recalculated from Latest State Data)")
 
-    if not all_states_vaccine_df.empty:
-        latest_vaccine_india = all_states_vaccine_df.iloc[0]
-    else:
-        latest_vaccine_india = None
-        col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3)
+    
+    latest_cases_confirmed = "N/A"
+    latest_cases_deaths = "N/A"
+    latest_vaccine_doses = "N/A"
+
+    if not df_cases.empty:
+        latest_date_cases = df_cases['Date'].max()
+        latest_cases_summary = df_cases[df_cases['Date'] == latest_date_cases]
+        
+        if not latest_cases_summary.empty:
+            total_confirmed = latest_cases_summary.get('Confirmed', pd.Series([0])).sum()
+            total_deaths = latest_cases_summary.get('Deaths', pd.Series([0])).sum()
+            latest_cases_confirmed = f'{total_confirmed:, .0f}'
+            latest_cases_deaths = f'{total_deaths:, .0f}'
+        
+  
+    if not df_vaccination.empty:
+        latest_date_vaccine = df_vaccination['Date'].max()
+        latest_vaccine_summary = df_vaccination[df_vaccination['Date'] == latest_date_vaccine]
+        
+        if not latest_vaccine_summary.empty and "Total Doses Administered" in latest_vaccine_summary.columns:
+            total_doses = latest_vaccine_summary["Total Doses Administered"].sum()
+            latest_vaccine_doses = f'{total_doses:, .0f}'
 
     with col1:
-        st.metric("Total Confirmed Cases", f'{latest_cases["Confirmed"]:, .0f}')
+        st.metric("Total Confirmed Cases", latest_cases_confirmed)
     with col2:
-        st.metric("Total Deaths", f'{latest_cases["Deaths"]:, .0f}')
-
-    if latest_vaccine_india is not None:
-        with col3:
-            st.metric("Total Doses Administered", f'{latest_vaccine_india["Total Doses Administered"]:, .0f}')
-    else:
-        with col3:
-            st.metric("Total Doses Administered", "Data not available")
+        st.metric("Total Deaths", latest_cases_deaths)
+    with col3:
+        st.metric("Total Doses Administered", latest_vaccine_doses)
 
     st.subheader("---")
 
