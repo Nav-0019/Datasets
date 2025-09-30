@@ -82,8 +82,8 @@ def run_app():
         if not latest_cases_summary.empty:
             total_confirmed = latest_cases_summary.get('Confirmed', pd.Series([0])).sum()
             total_deaths = latest_cases_summary.get('Deaths', pd.Series([0])).sum()
-            latest_cases_confirmed = f'{total_confirmed:, .0f}'
-            latest_cases_deaths = f'{total_deaths:, .0f}'
+            latest_cases_confirmed = f'{total_confirmed:,}'
+            latest_cases_deaths = f'{total_deaths:,}'
         
   
     if not df_vaccination.empty:
@@ -91,8 +91,8 @@ def run_app():
         latest_vaccine_summary = df_vaccination[df_vaccination['Date'] == latest_date_vaccine]
         
         if not latest_vaccine_summary.empty and "Total Doses Administered" in latest_vaccine_summary.columns:
-            total_doses = latest_vaccine_summary["Total Doses Administered"].sum()
-            latest_vaccine_doses = f'{total_doses:, .0f}'
+            total_doses = int(latest_vaccine_summary["Total Doses Administered"]).sum()
+            latest_vaccine_doses = f'{total_doses:,}'
 
     with col1:
         st.metric("Total Confirmed Cases", latest_cases_confirmed)
