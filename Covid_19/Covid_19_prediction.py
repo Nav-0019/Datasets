@@ -71,10 +71,20 @@ def run_app():
 
     st.subheader("COVID-19 Cases Data")
 
-    latest_cases = df_cases[df_cases['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False).iloc[0]
-    latest_vaccine_india = df_vaccination[df_vaccination['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False).iloc[0] if 'All States/UTs' in df_vaccination['State'].unique() else None
+    all_states_df = df_cases[df_cases['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False)
+    if not all_states_df.empty:
+        latest_cases = all_states_df.iloc[0]
+    else:
+        st.warning("No aggregated 'All States/UTs' data available.")
+        latest_cases = None
+    
+    all_states_vaccine_df = df_vaccination[df_vaccination['State'] == 'All States/UTs'].sort_values(by='Date', ascending=False)
 
-    col1, col2, col3 = st.columns(3)
+    if not all_states_vaccine_df.empty:
+        latest_vaccine_india = all_states_vaccine_df.iloc[0]
+    else:
+        latest_vaccine_india = None
+        col1, col2, col3 = st.columns(3)
 
     with col1:
         st.metric("Total Confirmed Cases", f'{latest_cases["Confirmed"]:, .0f}')
