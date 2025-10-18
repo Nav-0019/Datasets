@@ -53,7 +53,7 @@ def calculate_risk_maps(df_train):
     return state_risk_map, city_risk_map
 
 def apply_transformations(df, state_map=None, city_map=None, is_training=True):
-    df = df.copy()
+    df = pd.DataFrame(df).copy()
     
     # Binary encodings
     df["Married/Single"] = df["Married/Single"].map({'single':0, 'married':1}).fillna(0).astype(int)
