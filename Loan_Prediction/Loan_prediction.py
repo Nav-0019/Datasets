@@ -193,4 +193,3 @@ if __name__ == "__main__":
         </div>
         """, unsafe_allow_html=True)
 
-        st.sidebar.markdown(f"Model Training Accuracy: **{accuracy_score(y_test, model.predict(X_test)): .2%}**")
