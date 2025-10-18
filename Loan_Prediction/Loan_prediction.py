@@ -106,7 +106,7 @@ def train_model(x_train, y_train):
 # --- Main App ---
 if __name__ == "__main__":
     st.set_page_config(page_title="Loan Risk Predictor", layout="centered")
-    DATA_FILE_PATH = 'Training Data.csv'
+    DATA_FILE_PATH = 'Loan_Prediction/Training Data.csv'
     
     try:
         data = load_data(DATA_FILE_PATH)
